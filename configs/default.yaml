@@ -1,0 +1,24 @@
+# Stage 1 Configuration - Execution Skeleton
+
+# Data paths
+data:
+  input_path: "data/market_data.csv"
+  
+# Execution settings
+execution:
+  random_seed: 42
+  verbose: true
+  
+# Placeholder for future parameters
+indicators:
+  # To be defined in Stage 2
+  example_window: 20
+  
+signals:
+  # To be defined in Stage 2
+  example_threshold: 0.5
+
+# Output settings
+output:
+  save_config_snapshot: true
+  create_summary: true

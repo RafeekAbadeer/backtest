@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Project specific
+results/
+logs/*.log
+data/*.csv
+data/*.parquet
+*.log
+
+# Keep directory structure
+!results/.gitkeep
+!logs/.gitkeep
+!data/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
