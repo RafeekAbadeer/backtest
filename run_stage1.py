@@ -17,7 +17,7 @@ def run():
     # Setup paths
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     output_dir = f"results/{timestamp}/stage1/"
-    input_file = "data/source_1h.csv" # Standard location
+    input_file = "data/clean_combined_crypto_data.csv" # Standard location
 
     # 1. Load and Validate
     df_raw = pd.read_csv(input_file)
