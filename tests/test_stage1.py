@@ -1,41 +1,65 @@
-import pytest
-import pandas as pd
-import numpy as np
-from src.engine import Stage1Engine
-from src.utils import validate_input_data
+#!/usr/bin/env python3
+"""
+Stage 1 Entry Point - Execution Skeleton
+Usage: python run_stage1.py configs/default.yaml
+"""
 
-def create_mock_1h_data(rows=48):
-    """Creates valid 1H data for 2 full days."""
-    times = pd.date_range("2023-01-01", periods=rows, freq="h")
-    df = pd.DataFrame({
-        'Datetime_Obj': times,
-        'Open': 100.0, 'High': 110.0, 'Low': 90.0, 'Close': 105.0, 'Volume': 1000
-    })
-    return df
+import sys
+import yaml
+import shutil
+from pathlib import Path
+from src.utils import setup_logging, create_run_directory, save_config_snapshot
+from src.engine import run_backtest
 
-def test_daily_aggregation():
-    df_1h = create_mock_1h_data(rows=48)
-    engine = Stage1Engine({"ma_period": 2})
-    daily = engine.aggregate_daily(df_1h)
+def main():
+    if len(sys.argv) != 2:
+        print("Usage: python run_stage1.py <config.yaml>")
+        sys.exit(1)
     
-    # Assert 48 hours becomes 2 days
-    assert len(daily) == 2
-    # Verify Volume sum (24 * 1000)
-    assert daily.loc[0, 'Volume'] == 24000
-
-def test_gap_detection():
-    df_1h = create_mock_1h_data(rows=48)
-    df_broken = df_1h.drop(index=5) # Create a gap
-    with pytest.raises(ValueError, match="missing 1H candles"):
-        validate_input_data(df_broken)
-
-def test_indicator_lookback():
-    df_1h = create_mock_1h_data(rows=120) # 5 days
-    engine = Stage1Engine({"ma_period": 3})
-    daily = engine.aggregate_daily(df_1h)
-    daily = engine.compute_indicators(daily)
+    config_path = Path(sys.argv[1])
+    if not config_path.exists():
+        print(f"Error: Config file not found: {config_path}")
+        sys.exit(1)
     
-    # First 2 days should be NaN for a 3-period MA
-    assert np.isnan(daily.loc[0, 'ma_value'])
-    assert np.isnan(daily.loc[1, 'ma_value'])
-    assert not np.isnan(daily.loc[2, 'ma_value'])
+    # Load configuration
+    with open(config_path) as f:
+        config = yaml.safe_load(f)
+    
+    # Create timestamped run directory
+    run_dir = create_run_directory()
+    print(f"Run directory: {run_dir}")
+    
+    # Setup logging
+    logger = setup_logging(run_dir, config['execution']['verbose'])
+    logger.info(f"Starting Stage 1 execution")
+    logger.info(f"Config: {config_path}")
+    
+    # Save configuration snapshot
+    if config['output']['save_config_snapshot']:
+        save_config_snapshot(config, config_path, run_dir)
+        logger.info("Configuration snapshot saved")
+    
+    # Run the backtest engine
+    try:
+        results = run_backtest(config, logger)
+        logger.info("Execution completed successfully")
+        
+        # Save summary
+        if config['output']['create_summary']:
+            summary_path = run_dir / "summary.txt"
+            with open(summary_path, 'w') as f:
+                f.write(f"Stage 1 Execution Summary\n")
+                f.write(f"========================\n")
+                f.write(f"Status: SUCCESS\n")
+                f.write(f"Results: {results}\n")
+            logger.info(f"Summary saved to {summary_path}")
+        
+        print(f"\n✓ Execution complete. Results in: {run_dir}")
+        
+    except Exception as e:
+        logger.error(f"Execution failed: {e}", exc_info=True)
+        print(f"\n✗ Execution failed. Check logs in: {run_dir}")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()

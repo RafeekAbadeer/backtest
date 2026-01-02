@@ -1,22 +1,32 @@
-# Stage 1 Configuration - Execution Skeleton
+# Stage 1 & 2 Configuration
 
 # Data paths
 data:
-  input_path: "data/market_data.csv"
+  hourly_input_path: "data/clean_combined_crypto_data.csv"
   
 # Execution settings
 execution:
   random_seed: 42
   verbose: true
+
+# Stage 1 Parameters (Daily Signal Generation)
+stage1:
+  # Moving Average
+  ma_period: 20
+  ma_type: "EMA"  # "EMA" or "SMA"
   
-# Placeholder for future parameters
-indicators:
-  # To be defined in Stage 2
-  example_window: 20
+  # RSI
+  rsi_period: 14
+  rsi_threshold: 30
   
-signals:
-  # To be defined in Stage 2
-  example_threshold: 0.5
+  # Peak / Drawdown
+  peak_window: 252
+  dd_threshold: -0.10
+
+# Stage 2 Parameters (Hourly Entry Logic)
+stage2:
+  entry_dip_pct: 0.02  # 2% dip
+  entry_ref_type: "close"  # "close" or "ma_value"
 
 # Output settings
 output:

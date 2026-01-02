@@ -1,4 +1,3 @@
 PyYAML>=6.0
-# Add data processing libraries as needed in later stages:
-# pandas>=2.0.0
-# numpy>=1.24.0
+pandas>=2.0.0
+numpy>=1.24.0
