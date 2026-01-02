@@ -1,61 +1,38 @@
-"""
-Utility functions for logging, directory management, and configuration
-"""
-
-import logging
-import shutil
-from datetime import datetime
+import pandas as pd
+import os
 from pathlib import Path
 
-def create_run_directory():
-    """Create timestamped directory for this run"""
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    run_dir = Path("results") / f"run_{timestamp}"
-    run_dir.mkdir(parents=True, exist_ok=True)
-    return run_dir
+def validate_input_data(df: pd.DataFrame):
+    """
+    Validates the 1H source data for schema integrity and continuity.
+    Fails loudly if 1H candles are missing or timestamps are duplicated.
+    """
+    required_cols = ['Datetime_Obj', 'Open', 'High', 'Low', 'Close', 'Volume']
+    if not all(col in df.columns for col in required_cols):
+        missing = set(required_cols) - set(df.columns)
+        raise ValueError(f"Schema Mismatch. Missing columns: {missing}")
 
-def setup_logging(run_dir, verbose=True):
-    """Setup dual logging to file and console"""
-    log_dir = Path("logs")
-    log_dir.mkdir(exist_ok=True)
+    # Ensure datetime conversion
+    df['Datetime_Obj'] = pd.to_datetime(df['Datetime_Obj'])
     
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_file = log_dir / f"run_{timestamp}.log"
-    
-    # Create logger
-    logger = logging.getLogger("quant_research")
-    logger.setLevel(logging.DEBUG if verbose else logging.INFO)
-    
-    # File handler (detailed)
-    fh = logging.FileHandler(log_file)
-    fh.setLevel(logging.DEBUG)
-    fh.setFormatter(logging.Formatter(
-        '%(asctime)s | %(levelname)-8s | %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
-    ))
-    
-    # Console handler (concise)
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.INFO)
-    ch.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
-    
-    logger.addHandler(fh)
-    logger.addHandler(ch)
-    
-    # Also save log symlink in run directory
-    run_log = run_dir / "execution.log"
-    shutil.copy2(log_file, run_log)
-    
-    return logger
+    # Check for duplicates
+    if df['Datetime_Obj'].duplicated().any():
+        raise ValueError("Data Integrity Error: Duplicate 1H timestamps detected.")
 
-def save_config_snapshot(config, config_path, run_dir):
-    """Save copy of config file used for this run"""
-    snapshot_path = run_dir / "config_snapshot.yaml"
-    shutil.copy2(config_path, snapshot_path)
-    
-    # Also save metadata
-    metadata_path = run_dir / "metadata.txt"
-    with open(metadata_path, 'w') as f:
-        f.write(f"Execution timestamp: {datetime.now().isoformat()}\n")
-        f.write(f"Config file: {config_path}\n")
-        f.write(f"Random seed: {config.get('execution', {}).get('random_seed', 'N/A')}\n")
+    # Check for gaps (hourly resolution)
+    df = df.sort_values('Datetime_Obj')
+    expected_range = pd.date_range(
+        start=df['Datetime_Obj'].min(),
+        end=df['Datetime_Obj'].max(),
+        freq='h'
+    )
+    if len(df) != len(expected_range):
+        actual_set = set(df['Datetime_Obj'])
+        expected_set = set(expected_range)
+        missing = sorted(list(expected_set - actual_set))
+        raise ValueError(f"Data Integrity Error: {len(missing)} missing 1H candles. First missing: {missing[0]}")
+
+def get_output_path(base_dir: str, filename: str) -> str:
+    """Ensures the results/timestamp/stage1/ directory exists and returns full path."""
+    Path(base_dir).mkdir(parents=True, exist_ok=True)
+    return os.path.join(base_dir, filename)
