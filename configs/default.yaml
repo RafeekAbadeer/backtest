@@ -28,7 +28,43 @@ stage2:
   entry_dip_pct: 0.02  # 2% dip
   entry_ref_type: "close"  # "close" or "ma_value"
 
+stage4:
+  
+  # Execution parameters
+  initial_capital: 10000
+  dip_pct: 0.02
+  reference_type: "close"
+  
+  # Exit parameters
+  tsl_trigger: 0.05
+  tsl_distance: 0.03
+  stop_loss: -0.10
+  max_hold_days: 90
+  
+  # DCA parameters
+  monthly_dca_amount: 1000
+  dca_conversion_enabled: true
+
+stage5:
+  # Stress test scenarios
+  stress_scenarios: ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8']
+  
+  # Parameter sweep grid (coarse)
+  sweep_parameters:
+    dip_pct: [0.01, 0.02, 0.04]
+    tsl_trigger: [0.03, 0.05, 0.10]
+    tsl_distance: [0.02, 0.03, 0.05]
+    stop_loss: [-0.10, -0.15]
+    max_hold_days: [60, 90, 180]
+
 # Output settings
 output:
   save_config_snapshot: true
   create_summary: true
+
+# Signal Generation Parameters (Stage 3)
+signals:
+  ma_period: 50
+  ma_type: "SMA"  # "SMA" or "EMA"
+  rsi_period: 14
+  rsi_threshold: 70

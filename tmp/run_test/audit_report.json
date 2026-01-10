@@ -1,0 +1,11 @@
+{
+    "counters": {
+        "negative_balance_observed": 0,
+        "broken_invariants_observed": 0,
+        "off_schedule_injections_observed": 0
+    },
+    "flags": {
+        "accounting_breach": false
+    },
+    "note": "Zero trades executed; invariant audit skipped."
+}

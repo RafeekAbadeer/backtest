@@ -10,7 +10,6 @@ import subprocess
 import logging
 from pathlib import Path
 from datetime import datetime
-from .execution import run_execution_engine
 
 
 def create_stage5_directory():

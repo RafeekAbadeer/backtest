@@ -1,0 +1,18 @@
+[
+    {
+        "scenario": "black_swan_flash_crash",
+        "filename": "black_swan_flash_crash.csv"
+    },
+    {
+        "scenario": "black_swan_deep_bleed",
+        "filename": "black_swan_deep_bleed.csv"
+    },
+    {
+        "scenario": "chop_tight_range",
+        "filename": "chop_tight_range.csv"
+    },
+    {
+        "scenario": "chop_wild_range",
+        "filename": "chop_wild_range.csv"
+    }
+]
